@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PDF Quiz Generator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -8,25 +9,87 @@
     .option-btn { width: 100%; margin-bottom: 10px; text-align: left; }
     .correct { background-color: #198754 !important; color: white; }
     .incorrect { background-color: #dc3545 !important; color: white; }
+    .spinner-border { width: 3rem; height: 3rem; }
+    #loading { display: none; }
+    .question-options { margin-top: 20px; }
+    #timerDisplay {
+      font-size: 1.2rem;
+      font-weight: bold;
+      background-color: #f8f9fa;
+      padding: 8px 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    .time-warning {
+      color: #fd7e14;
+    }
+    .time-danger {
+      color: #dc3545;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
   </style>
 </head>
 <body class="container my-5">
   <h1 class="mb-4">📘 PDF Quiz Generator</h1>
-  <form id="uploadForm" class="mb-4" enctype="multipart/form-data">
-    <input type="file" class="form-control mb-2" name="pdf_file" accept="application/pdf" required />
-    <button class="btn btn-primary" type="submit">Generate Quiz</button>
-  </form>
-
+  
+  <!-- Step 1: File Upload -->
+  <div id="uploadSection">
+    <form id="uploadForm" class="mb-4" enctype="multipart/form-data">
+      <input type="file" class="form-control mb-2" name="pdf_file" id="pdfFile" accept="application/pdf" required />
+      <button class="btn btn-primary" type="submit">Analyze PDF</button>
+    </form>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div id="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2" id="loadingText">Analyzing PDF content...</p>
+  </div>
+  
+  <!-- Step 2: Question Count Selection -->
+  <div id="questionOptionsSection" style="display:none" class="mb-4">
+    <h4>How many questions would you like to generate?</h4>
+    <p id="maxQuestionsInfo" class="text-muted"></p>
+    <div class="question-options" id="questionOptions"></div>
+    <button id="generateQuizBtn" class="btn btn-success mt-3">Generate Quiz</button>
+  </div>
+  
+  <!-- Step 3: Quiz Display -->
+  <div id="timerDisplay" class="d-flex justify-content-between align-items-center">
+    <div>
+      <span id="questionTimer">00:00</span> <small>Question Time</small>
+    </div>
+    <div>
+      <span id="totalTimer">00:00</span> <small>Total Time</small>
+    </div>
+  </div>
   <div id="quizContainer"></div>
   <button id="nextBtn" class="btn btn-secondary mt-3" style="display:none;">Next Question</button>
   <button id="retryBtn" class="btn btn-warning mt-3" style="display:none;">Retry</button>
   <div id="scoreContainer" class="mt-4 fw-bold"></div>
+  <div id="timerSummary" class="mt-3" style="display:none;"></div>
 
   <textarea id="quizRaw" style="display:none;"></textarea>
   <button id="downloadBtn" class="btn btn-success mt-3" style="display:none;">⬇️ Download as PDF</button>
 
   <script>
-    const form = document.getElementById("uploadForm");
+    // DOM Elements
+    const uploadForm = document.getElementById("uploadForm");
+    const uploadSection = document.getElementById("uploadSection");
+    const loading = document.getElementById("loading");
+    const loadingText = document.getElementById("loadingText");
+    const questionOptionsSection = document.getElementById("questionOptionsSection");
+    const questionOptions = document.getElementById("questionOptions");
+    const maxQuestionsInfo = document.getElementById("maxQuestionsInfo");
+    const generateQuizBtn = document.getElementById("generateQuizBtn");
     const quizContainer = document.getElementById("quizContainer");
     const nextBtn = document.getElementById("nextBtn");
     const retryBtn = document.getElementById("retryBtn");
@@ -34,44 +97,215 @@
     const quizRaw = document.getElementById("quizRaw");
     const scoreContainer = document.getElementById("scoreContainer");
 
+    // State Variables
     let quizData = [], currentQuestionIndex = 0, score = 0;
+    let pdfTextContent = "";
+    let selectedQuestionCount = 10; // Default
+    
+    // Timer Variables
+    let totalSeconds = 0;
+    let questionSeconds = 0;
+    let timerInterval;
+    let questionTimerInterval;
+    let questionTimestamps = [];
+    let timerActive = false;
 
-    form.onsubmit = async (e) => {
+    // Step 1: Upload and Analyze PDF
+    uploadForm.onsubmit = async (e) => {
       e.preventDefault();
-      quizContainer.innerHTML = "<p class='text-muted'>Generating quiz...</p>";
-      nextBtn.style.display = retryBtn.style.display = scoreContainer.innerText = 'none';
-      score = 0;
+      
+      // Show loading
+      loading.style.display = "block";
+      uploadSection.style.display = "none";
+      loadingText.textContent = "Analyzing PDF content...";
+      
+      const formData = new FormData(uploadForm);
+      try {
+        const res = await fetch('/analyze_pdf', { 
+          method: 'POST', 
+          body: formData 
+        });
+        
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        
+        // Check if there's an error
+        if (data.error) {
+          alert(data.error);
+          loading.style.display = "none";
+          uploadSection.style.display = "block";
+          return;
+        }
+        
+        // Save text content for later
+        pdfTextContent = data.text_content;
+        
+        // Show question count options
+        displayQuestionOptions(data.options, data.max_questions);
+        
+        // Hide loading, show question options
+        loading.style.display = "none";
+        questionOptionsSection.style.display = "block";
+        
+      } catch (error) {
+        alert("Error analyzing PDF: " + error.message);
+        loading.style.display = "none";
+        uploadSection.style.display = "block";
+      }
+    };
 
-      const formData = new FormData(form);
-      const res = await fetch('/generate_quiz', { method: 'POST', body: formData });
-      const data = await res.json();
+    // Display available question count options
+    function displayQuestionOptions(options, maxQuestions) {
+      questionOptions.innerHTML = "";
+      
+      options.forEach(count => {
+        const btn = document.createElement('button');
+        btn.textContent = `${count} Questions`;
+        btn.className = 'btn btn-outline-primary me-2';
+        btn.onclick = () => {
+          // Deselect all buttons
+          document.querySelectorAll('.question-options .btn').forEach(b => 
+            b.classList.replace('btn-primary', 'btn-outline-primary'));
+          
+          // Select this button
+          btn.classList.replace('btn-outline-primary', 'btn-primary');
+          selectedQuestionCount = count;
+        };
+        questionOptions.appendChild(btn);
+      });
+      
+      // Auto-select the first option
+      if (options.length > 0) {
+        const firstBtn = questionOptions.querySelector('.btn');
+        firstBtn.classList.replace('btn-outline-primary', 'btn-primary');
+        selectedQuestionCount = options[0];
+      }
+    }
 
-      quizRaw.value = data.quiz;
-      downloadBtn.style.display = 'inline-block';
-
-      quizData = parseQuiz(data.quiz);
-      currentQuestionIndex = 0;
-      showQuestion();
+    // Step 2: Generate Quiz
+    generateQuizBtn.onclick = async () => {
+      // Show loading
+      questionOptionsSection.style.display = "none";
+      loading.style.display = "block";
+      loadingText.textContent = "Generating quiz questions...";
+      
+      try {
+        const res = await fetch('/generate_quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text_content: pdfTextContent,
+            question_count: selectedQuestionCount
+          })
+        });
+        
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        
+        // Check if there's an error
+        if (data.error) {
+          alert(data.error);
+          loading.style.display = "none";
+          questionOptionsSection.style.display = "block";
+          return;
+        }
+        
+        // Process quiz data
+        quizRaw.value = data.quiz;
+        downloadBtn.style.display = 'inline-block';
+        
+        quizData = parseQuiz(data.quiz);
+        
+        // Validate parsed quiz data
+        if (quizData.length === 0) {
+          alert("Unable to generate valid quiz questions. Please try again or choose a different number of questions.");
+          loading.style.display = "none";
+          questionOptionsSection.style.display = "block";
+          return;
+        }
+        
+        if (quizData.length < selectedQuestionCount) {
+          console.warn(`Requested ${selectedQuestionCount} questions but only ${quizData.length} valid questions were generated.`);
+        }
+        
+        currentQuestionIndex = 0;
+        score = 0;
+        
+        // Reset and start timers
+        resetTimers();
+        startTimers();
+        document.getElementById('timerDisplay').style.display = 'flex';
+        
+        // Hide loading, show quiz
+        loading.style.display = "none";
+        showQuestion();
+        
+      } catch (error) {
+        alert("Error generating quiz: " + error.message);
+        loading.style.display = "none";
+        questionOptionsSection.style.display = "block";
+      }
     };
 
     function parseQuiz(text) {
-      const questions = text.trim().split(/\n(?=\d+\.\s)/g);
+      // Clean the text first - remove any extra line breaks or whitespace
+      const cleanText = text.replace(/\n{3,}/g, '\n\n').trim();
+      
+      // Find all questions - they should start with a number followed by period
+      const questions = cleanText.split(/\n(?=\d+\.\s)/g);
+      
       return questions.map(q => {
         const parts = q.trim().split('\n');
+        
+        // Get question text (first line minus the number)
         const questionText = parts[0].replace(/^\d+\.\s*/, '');
-        const options = parts.slice(1, 5).map(opt => ({
-          label: opt[0],
-          text: opt.slice(3)
-        }));
-        const answerLine = parts.find(line => line.toLowerCase().startsWith('answer'));
-        const correct = answerLine ? answerLine.split(':')[1].trim() : '';
+        
+        // Find options (look for A., B., C., D. patterns)
+        const options = [];
+        for (let i = 1; i < parts.length; i++) {
+          const line = parts[i].trim();
+          if (/^[A-D]\.\s/.test(line)) {
+            options.push({
+              label: line[0],  // Get the option letter
+              text: line.slice(3).trim()  // Get text after the letter
+            });
+          }
+        }
+        
+        // Find answer line
+        const answerLine = parts.find(line => 
+          line.toLowerCase().trim().startsWith('answer'));
+        
+        let correct = '';
+        if (answerLine) {
+          // Extract just the letter from "Answer: X"
+          const match = answerLine.match(/:\s*([A-D])/i);
+          if (match) correct = match[1].toUpperCase();
+        }
+        
         return { questionText, options, correct };
-      });
+      }).filter(q => 
+        // Filter out malformed questions (must have question text, 4 options, and an answer)
+        q.questionText && q.options.length === 4 && q.correct
+      );
     }
 
     function showQuestion() {
+      if (quizData.length === 0 || currentQuestionIndex >= quizData.length) {
+        quizContainer.innerHTML = "<p>No questions available</p>";
+        return;
+      }
+      
+      // Reset question timer for new question
+      resetQuestionTimer();
+      
       const q = quizData[currentQuestionIndex];
-      quizContainer.innerHTML = `<h5>${q.questionText}</h5>`;
+      quizContainer.innerHTML = `
+        <h5>Question ${currentQuestionIndex + 1} of ${quizData.length}</h5>
+        <p>${q.questionText}</p>
+      `;
 
       q.options.forEach(opt => {
         const btn = document.createElement('button');
@@ -80,17 +314,27 @@
         btn.dataset.label = opt.label;
 
         btn.onclick = () => {
+          // Save question timestamp and time taken
+          questionTimestamps[currentQuestionIndex] = {
+            questionNum: currentQuestionIndex + 1,
+            timeTaken: questionSeconds,
+            correct: btn.dataset.label === q.correct
+          };
+          
           const isCorrect = btn.dataset.label === q.correct;
           btn.classList.add(isCorrect ? 'correct' : 'incorrect');
           if (!isCorrect) {
             const correctBtn = [...quizContainer.querySelectorAll('button')].find(b => b.dataset.label === q.correct);
-            correctBtn.classList.add('correct');
+            if (correctBtn) correctBtn.classList.add('correct');
           } else {
             score++;
           }
           [...quizContainer.querySelectorAll('button')].forEach(b => b.disabled = true);
           nextBtn.style.display = currentQuestionIndex < quizData.length - 1 ? 'inline-block' : 'none';
           if (currentQuestionIndex === quizData.length - 1) {
+            // End of quiz
+            stopTimers();
+            displayTimerSummary();
             scoreContainer.innerHTML = `<p>Your Score: ${score}/${quizData.length}</p>`;
             retryBtn.style.display = 'inline-block';
           }
@@ -111,6 +355,12 @@
       score = 0;
       retryBtn.style.display = 'none';
       scoreContainer.innerText = '';
+      document.getElementById('timerSummary').style.display = 'none';
+      
+      // Reset and restart timers
+      resetTimers();
+      startTimers();
+      
       showQuestion();
     };
 
@@ -131,6 +381,95 @@
       });
       doc.save("generated_quiz.pdf");
     };
+    
+    // Timer Functions
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    function updateTimers() {
+      totalSeconds++;
+      questionSeconds++;
+      
+      document.getElementById('totalTimer').textContent = formatTime(totalSeconds);
+      
+      const questionTimerElement = document.getElementById('questionTimer');
+      questionTimerElement.textContent = formatTime(questionSeconds);
+      
+      // Add warning classes based on time
+      if (questionSeconds >= 60) {
+        questionTimerElement.classList.add('time-warning');
+      }
+      if (questionSeconds >= 120) {
+        questionTimerElement.classList.replace('time-warning', 'time-danger');
+      }
+    }
+    
+    function startTimers() {
+      timerActive = true;
+      timerInterval = setInterval(updateTimers, 1000);
+    }
+    
+    function stopTimers() {
+      timerActive = false;
+      clearInterval(timerInterval);
+    }
+    
+    function resetTimers() {
+      stopTimers();
+      totalSeconds = 0;
+      questionSeconds = 0;
+      questionTimestamps = [];
+      document.getElementById('totalTimer').textContent = "00:00";
+      document.getElementById('questionTimer').textContent = "00:00";
+    }
+    
+    function resetQuestionTimer() {
+      questionSeconds = 0;
+      const questionTimerElement = document.getElementById('questionTimer');
+      questionTimerElement.textContent = "00:00";
+      questionTimerElement.classList.remove('time-warning', 'time-danger');
+    }
+    
+    function displayTimerSummary() {
+      const timerSummary = document.getElementById('timerSummary');
+      timerSummary.style.display = 'block';
+      
+      let summaryHTML = `
+        <h5>Time Summary</h5>
+        <p>Total Quiz Time: ${formatTime(totalSeconds)}</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Time Taken</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      questionTimestamps.forEach(q => {
+        summaryHTML += `
+          <tr>
+            <td>Question ${q.questionNum}</td>
+            <td>${formatTime(q.timeTaken)}</td>
+            <td>${q.correct ? '<span class="text-success">Correct</span>' : '<span class="text-danger">Incorrect</span>'}</td>
+          </tr>
+        `;
+      });
+      
+      summaryHTML += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      timerSummary.innerHTML = summaryHTML;
+    }
   </script>
 </body>
 </html>
