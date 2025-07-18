@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, redirect
 import fitz  # PyMuPDF
 import os
 from dotenv import load_dotenv
@@ -7,22 +7,35 @@ from PIL import Image
 import requests
 import math
 import re
+from io import BytesIO
+from flask_cors import CORS
+from flask_mysqldb import MySQL
+import MySQLdb.cursors
+
 
 load_dotenv()
 
-# Your OpenRouter API key and headers
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 HEADERS = {
     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
     "Content-Type": "application/json",
-    "HTTP-Referer": "http://localhost:5000",  
+    "HTTP-Referer": "http://localhost:5000",
     "X-Title": "PDF Quiz Generator"
 }
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
 
-# === Function to extract text from PDF (with OCR fallback) ===
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_DB'] = 'login'
+
+mysql = MySQL(app)
+
+CORS(app)
+
+
 def extract_text(file_stream):
     doc = fitz.open(stream=file_stream.read(), filetype="pdf")
     text = ""
@@ -35,33 +48,22 @@ def extract_text(file_stream):
         text += page_text
     return text
 
-# === Function to estimate maximum possible questions ===
 def estimate_max_questions(text):
-    # Rough estimate: about 100 characters per question (including options)
-    # This is a simplified heuristic - adjust as needed
     word_count = len(text.split())
-    
-    # Using words as a metric instead of characters
-    # Assuming ~20-25 words per question+answer set
     max_questions = math.floor(word_count / 25)
-    
-    # Cap at reasonable limits for API constraints
     return min(max_questions, 20)
 
-# === Function to call DeepSeek API ===
 def generate_quiz(text, question_count=10, temperature=0.9):
-    # Ensure we have enough text for the model to work with
-    # For smaller question counts, we need less text
     max_text_length = min(3000, 1000 + (question_count * 100))
     text_sample = text[:max_text_length]
-    
+
     prompt = f"""
 Create exactly {question_count} multiple-choice questions based on the following content. Each question should have:
 - 4 answer choices labeled A–D
-- The correct answer labeled like "Answer: B"
+- The correct answer labeled like "Answer: B" at the bottom of page for each questions
 
 Number the questions from 1 to {question_count}.
-Only show questions and options, not explanations.
+Only show questions and options and explanations.
 
 Content:
 {text_sample}
@@ -71,111 +73,121 @@ Content:
         "https://openrouter.ai/api/v1/chat/completions",
         headers=HEADERS,
         json={
-        "model": "deepseek/deepseek-r1",
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 3000,
-        "temperature": temperature # Adding some randomness to help with variety
-    }
+            "model": "google/gemma-3-12b-it:free",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 3000,
+            "temperature": temperature
+        }
     )
 
     try:
         result = response.json()
-        print("=== DEBUG API RESPONSE ===")
-        print(result)
-
-        # Defensive check to prevent crash
         if "choices" in result:
             quiz_text = result['choices'][0]['message']['content']
-            
-            # Verify question count matches what was requested
-            question_count_regex = re.compile(r'\d+\.')
-            actual_questions = len(question_count_regex.findall(quiz_text))
-            
-            # If we don't have enough questions, try again with a more explicit prompt
+            actual_questions = len(re.findall(r'\d+\.', quiz_text))
             if actual_questions < question_count:
-                print(f"Got {actual_questions} questions, but expected {question_count}. Retrying...")
                 return generate_quiz_backup(text, question_count)
-                
             return quiz_text
         else:
             return f"API Error: {result}"
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Backup function with more explicit formatting to ensure correct number of questions
 def generate_quiz_backup(text, question_count=10):
-    text_sample = text[:3000]  # Get a good chunk of text
-    
+    text_sample = text[:3000]
     prompt = f"""
 I need EXACTLY {question_count} multiple-choice questions. No more, no less.
 
-Format each question EXACTLY like this:
+Format each question like this:
 1. [Question text]
 A. [Option A]
 B. [Option B]
 C. [Option C]
 D. [Option D]
-Answer: [Correct letter]
 
 2. [Question text]
-...and so on.
+A. [Option A]
+B. [Option B]
+C. [Option C]
+D. [Option D]
+...
+
+New page:
+Answer: 1. [Correct letter]:explanation
+        2. [Correct letter]:explanation
+...
 
 Generate these questions based on this content:
 {text_sample}
 """
-
     try:
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers=HEADERS,
             json={
-                "model": "deepseek/deepseek-r1",
+                "model": "google/gemma-3-12b-it:free",
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 3000,
                 "temperature": 0.5
             }
         )
-        
         result = response.json()
-        
         if "choices" in result:
             return result['choices'][0]['message']['content']
         else:
-            # If API fails, generate simple placeholder questions
             return generate_fallback_questions(text, question_count)
-    except Exception as e:
+    except Exception:
         return generate_fallback_questions(text, question_count)
 
-# Last resort fallback to generate simple questions if API fails
+
 def generate_fallback_questions(text, question_count):
-    # Create simple questions from the text
     words = text.split()
     questions = []
-    
-    for i in range(min(question_count, 5)):  # Limit to 5 questions max for fallback
+    for i in range(min(question_count, 5)):
         if len(words) < 50:
             break
-            
         start_idx = i * 50
         if start_idx + 30 > len(words):
             break
-            
-        sample = " ".join(words[start_idx:start_idx+30])
-        
         questions.append(f"{i+1}. What is the main topic of this passage?\nA. Topic 1\nB. Topic 2\nC. Topic 3\nD. Topic 4\nAnswer: A")
-    
-    # Fill remaining questions with generic ones
     while len(questions) < question_count:
         questions.append(f"{len(questions)+1}. Which statement best summarizes the text?\nA. Summary 1\nB. Summary 2\nC. Summary 3\nD. Summary 4\nAnswer: B")
-    
     return "\n\n".join(questions)
 
-# === ROUTES ===
+
+from flask import Flask, request, render_template
+
+
+@app.route('/')
+def home():
+    user_id = request.args.get('user_id')
+    
+    if not user_id:
+        return "No user_id provided. Please log in via PHP.", 400
+    
+    return render_template("index.html", user_id=user_id)
+
+
 @app.route('/')
 def index():
-    with open("templates/index.html", encoding="utf-8") as f:
-        HTML = f.read()
-    return render_template_string(HTML)
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return "User ID not provided. Please log in via the PHP system.", 400
+
+    return render_template_string(f"""
+        <html>
+        <head><title>Quiz Generator</title></head>
+        <body>
+            <h2>Welcome, User {user_id}</h2>
+            <form action="/analyze_pdf" method="post" enctype="multipart/form-data">
+                <input type="file" name="pdf_file" required><br><br>
+                <input type="hidden" name="user_id" value="{user_id}">
+                <button type="submit">Analyze PDF</button>
+            </form>
+        </body>
+        </html>
+    """)
+
 
 @app.route('/analyze_pdf', methods=['POST'])
 def analyze_pdf():
@@ -183,23 +195,16 @@ def analyze_pdf():
         return jsonify({"error": "No file uploaded!"}), 400
 
     file = request.files['pdf_file']
+    user_id = request.form.get('user_id')
+
     if file.filename == '':
         return jsonify({"error": "No selected file!"}), 400
 
     try:
-        # Save a copy of the file stream
-        file_content = file.read()
-        file.seek(0)  # Reset stream position
-        
-        # Create a temporary file-like object
-        from io import BytesIO
-        temp_file = BytesIO(file_content)
-        
-        # Extract text and estimate max questions
+        temp_file = BytesIO(file.read())
         text = extract_text(temp_file)
         max_questions = estimate_max_questions(text)
-        
-        # Determine available options
+
         options = []
         if max_questions >= 5:
             options.append(5)
@@ -207,18 +212,16 @@ def analyze_pdf():
             options.append(10)
         if max_questions >= 20:
             options.append(20)
-            
-        # Store text in session or cache for later use
-        # For simplicity, we'll return it to the client, but in production
-        # you should store it server-side (session, cache, etc.)
-        
+
         return jsonify({
+            "user_id": user_id,
             "max_questions": max_questions,
             "options": options,
-            "text_content": text[:5000]  # Limit for demo purposes
+            "text_content": text[:5000]  
         })
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
 
 @app.route('/generate_quiz', methods=['POST'])
 def quiz():
@@ -226,12 +229,29 @@ def quiz():
         data = request.json
         text = data.get('text_content', '')
         question_count = int(data.get('question_count', 10))
-        
+        user_id = data.get('user_id')
+
+        if not user_id:
+            return jsonify({"error": "User ID is required"}), 400
+
         quiz = generate_quiz(text, question_count)
-        return jsonify({"quiz": quiz})
+
+        try:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('''
+                INSERT INTO quizzes (user_id, quiz_content, question_count, created_at)
+                VALUES (%s, %s, %s, NOW())
+            ''', (user_id, quiz, question_count))
+            mysql.connection.commit()
+            cursor.close()
+        except Exception as db_error:
+            print(f"Database Error: {str(db_error)}")
+            return jsonify({"error": f"Database error: {str(db_error)}"}), 500
+
+        return jsonify({"quiz": quiz, "message": "Quiz saved successfully"})
     except Exception as e:
+        print(f"Error in quiz generation: {str(e)}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
-# === Run Flask App ===
 if __name__ == '__main__':
     app.run(debug=True)
