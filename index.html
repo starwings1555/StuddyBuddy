@@ -33,11 +33,200 @@
       50% { opacity: 0.5; }
       100% { opacity: 1; }
     }
+    
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  45% { opacity: 1; }
+  55% { opacity: 0; }
+  100% { opacity: 0; }
+}
+#genQuizText {
+  display: inline-block;
+  animation: fadeInOut 4s linear infinite;
+}
+
+.modal-backdrop {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 20px;
+  max-width: 400px;
+  width: 90%;
+  padding: 30px 20px 20px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  text-align: center;
+  position: relative;
+}
+.modal-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.modal-body {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+.modal-footer {
+  display: flex;
+  justify-content: center;
+}
+
+    .sidebar {
+      position: fixed;
+      right: -300px;
+      top: 0;
+      width: 300px;
+      height: 100vh;
+      background-color: #fff;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .sidebar.open {
+      right: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .sidebar-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 10px;
+    }
+
+    .sidebar-menu button {
+      width: 100%;
+      padding: 10px;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #333;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    .sidebar-menu button:hover {
+      background-color: #f5f5f5;
+    }
+
+    .credential-form {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+
+    .credential-form input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .credential-form button {
+      width: 100%;
+      padding: 8px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .credential-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .sidebar-toggle {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+
   </style>
 </head>
 <body class="container my-5">
-  <h1 class="mb-4">📘 PDF Quiz Generator</h1>
   
+<div id="leftSidebar" style="position:fixed;top:0;left:0;height:100vh;width:220px;background:#222;color:#fff;z-index:1100;display:flex;flex-direction:column;align-items:center;padding-top:40px;justify-content:space-between;">
+  <div style="width:100%">
+    <div class="mb-4" style="font-size:1.5rem;font-weight:bold;text-align:center;">StudyBuddy</div>
+    <a id="navHome" href="#" class="mb-2 text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-secondary d-block">Home</a>
+    <a id="navMonitor" href="#" class="mb-2 text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-secondary d-block">Monitor</a>
+    <a id="navHistory" href="#" class="mb-2 text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-secondary d-block">Quiz History</a>
+    <hr class="w-100 my-3" style="border-color:#444;">
+    <a id="changeUsernameBtn" href="#" class="mb-2 text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-secondary d-block">Change Username</a>
+    <form id="usernameForm" class="mb-2" style="display:none;background:none;padding:0;">
+      <input type="text" id="newUsername" placeholder="New Username" style="width:100%;border:1px solid #444;background:#222;color:#fff;border-radius:6px;padding:6px 10px;margin-bottom:6px;outline:none;" />
+      <button type="submit" style="width:100%;background:#007bff;color:#fff;border:none;border-radius:6px;padding:6px 0;font-size:1rem;">Update Username</button>
+    </form>
+    <a id="changePasswordBtn" href="#" class="mb-2 text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-secondary d-block">Change Password</a>
+    <form id="passwordForm" class="mb-2" style="display:none;background:none;padding:0;">
+      <input type="password" id="newPassword" placeholder="New Password" style="width:100%;border:1px solid #444;background:#222;color:#fff;border-radius:6px;padding:6px 10px;margin-bottom:6px;outline:none;" />
+      <button type="submit" style="width:100%;background:#007bff;color:#fff;border:none;border-radius:6px;padding:6px 0;font-size:1rem;">Update Password</button>
+    </form>
+        </div>
+        
+  <div class="w-100 px-3 mb-4">
+    <button onclick="handleLogout()" class="btn btn-danger w-100">Logout</button>
+                </div>
+                </div>
+<div style="margin-left:220px;">
+
+  <div id="welcomeModal" class="modal-backdrop" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <img src="studdybuddy_logo.png" style="width:100px; margin-bottom:10px;">
+        <h2>Welcome to StudyBuddy</h2>
+      </div>
+      <div class="modal-body">
+        <p>
+          <b>Please upload your PDF content with one topic only and make sure the PDF content is in English,lesser than 5 MB.</b><br>
+          <b>This is to ensure the AI can generate the best quiz for you.</b><br>
+          Be mindful and careful using the system as sometimes AI can make mistakes. Thank you!
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button id="closeWelcomeModal" class="btn btn-danger" style="width:100px;">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Step 1: File Upload -->
   <div id="uploadSection">
     <form id="uploadForm" class="mb-4" enctype="multipart/form-data">
@@ -46,12 +235,11 @@
     </form>
   </div>
   
-  <!-- Loading Indicator -->
   <div id="loading" class="text-center my-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
-    <p class="mt-2" id="loadingText">Analyzing PDF content...</p>
+    <p class="mt-2" id="loadingText">Analyzing PDF content...This may take longer than usual.</p>
   </div>
   
   <!-- Step 2: Question Count Selection -->
@@ -65,10 +253,10 @@
   <!-- Step 3: Quiz Display -->
   <div id="timerDisplay" class="d-flex justify-content-between align-items-center">
     <div>
-      <span id="questionTimer">00:00</span> <small>Question Time</small>
+    <span class="fw-bold">Question Time:</span> <span id="questionTimer">0 seconds</span>
     </div>
     <div>
-      <span id="totalTimer">00:00</span> <small>Total Time</small>
+    <span class="fw-bold">Total Time:</span> <span id="totalTimer">0 seconds</span>
     </div>
   </div>
   <div id="quizContainer"></div>
@@ -78,10 +266,139 @@
   <div id="timerSummary" class="mt-3" style="display:none;"></div>
 
   <textarea id="quizRaw" style="display:none;"></textarea>
-  <button id="downloadBtn" class="btn btn-success mt-3" style="display:none;">⬇️ Download as PDF</button>
+<div id="buttonContainer" class="mt-3" style="display:none;">
+  <button onclick="returnToQuiz()" class="btn btn-secondary me-2">Back to Quiz</button>
+</div>
+  
+  <div id="generatingQuizMsg" class="text-center my-4" style="display:none;">
+    <span id="genQuizText"></span>
+  </div>
+
+  <div id="postQuizGenModal" class="modal-backdrop" style="display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);">
+    <div class="modal-content" style="max-width:350px;width:95%;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);text-align:center;">
+      <div class="modal-header" style="border-bottom:none;justify-content:center;">
+        <img src="exicted.png" style="width:80px;display:block;margin:0 auto 10px auto;">
+        <h2 style="font-size:1.6rem;font-weight:700;margin-bottom:10px;">Quiz Ready!</h2>
+      </div>
+      <div class="modal-body" style="font-size:1.1rem;color:#444;margin-bottom:22px;">
+        <p style="margin-bottom:0;">Your quiz has been generated.<br>What would you like to do next?</p>
+      </div>
+      <div class="modal-footer" style="display:flex;flex-direction:column;gap:12px;">
+        <button id="downloadQuizNowBtn" class="btn btn-success" style="width:100%;font-size:1.1rem;">Download as PDF</button>
+        <button id="continueQuizBtn" class="btn btn-primary" style="width:100%;font-size:1.1rem;">Continue to Quiz</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // DOM Elements
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+      const navHome = document.getElementById('navHome');
+      const navMonitor = document.getElementById('navMonitor');
+      const navHistory = document.getElementById('navHistory');
+        if (userId) {
+          navHome.href = `http://localhost:8000/index.html?user_id=${userId}`;
+          navMonitor.href = `http://localhost:8000/monitor.html?user_id=${userId}`;
+          navHistory.href = `http://localhost:8000/quiz_history.html?user_id=${userId}`;
+      }
+        const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const usernameForm = document.getElementById('usernameForm');
+        const passwordForm = document.getElementById('passwordForm');
+      changeUsernameBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+            usernameForm.style.display = usernameForm.style.display === 'block' ? 'none' : 'block';
+            passwordForm.style.display = 'none';
+        });
+      changePasswordBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+            passwordForm.style.display = passwordForm.style.display === 'block' ? 'none' : 'block';
+            usernameForm.style.display = 'none';
+        });
+      usernameForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          changeUsername();
+      });
+      passwordForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          changePassword();
+        });
+    });
+
+    async function changeUsername() {
+        const newUsername = document.getElementById('newUsername').value.trim();
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+
+        if (!newUsername) {
+            alert('Please enter a new username');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8000/update_username.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, new_username: newUsername })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert('Username updated successfully');
+                document.getElementById('usernameForm').style.display = 'none';
+                document.getElementById('newUsername').value = '';
+            } else {
+                alert(data.message || 'Failed to update username');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating username');
+        }
+    }
+
+    async function changePassword() {
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+
+        if (!newPassword) {
+            alert('Please enter a new password');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8000/update_password.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, new_password: newPassword })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert('Password updated successfully');
+                document.getElementById('passwordForm').style.display = 'none';
+                document.getElementById('newPassword').value = '';
+            } else {
+                alert(data.message || 'Failed to update password');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating password');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!sessionStorage.getItem('welcomeModalShown')) {
+        document.getElementById('welcomeModal').style.display = 'flex';
+        document.getElementById('closeWelcomeModal').onclick = function() {
+          document.getElementById('welcomeModal').style.display = 'none';
+          sessionStorage.setItem('welcomeModalShown', 'true');
+        };
+      }
+    });
+
     const uploadForm = document.getElementById("uploadForm");
     const uploadSection = document.getElementById("uploadSection");
     const loading = document.getElementById("loading");
@@ -93,16 +410,13 @@
     const quizContainer = document.getElementById("quizContainer");
     const nextBtn = document.getElementById("nextBtn");
     const retryBtn = document.getElementById("retryBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
     const quizRaw = document.getElementById("quizRaw");
     const scoreContainer = document.getElementById("scoreContainer");
 
-    // State Variables
     let quizData = [], currentQuestionIndex = 0, score = 0;
     let pdfTextContent = "";
-    let selectedQuestionCount = 10; // Default
+    let selectedQuestionCount = 10; 
     
-    // Timer Variables
     let totalSeconds = 0;
     let questionSeconds = 0;
     let timerInterval;
@@ -110,18 +424,36 @@
     let questionTimestamps = [];
     let timerActive = false;
 
+    const generatingQuizMsg = document.getElementById('generatingQuizMsg');
+    const genQuizText = document.getElementById('genQuizText');
+    const genQuizSentences = [
+      "Generating quiz... please don't turn off or refresh your screen.",
+      "Please don't click back while the quiz is being generated.",
+      "This may take a while, please be patient."
+    ];
+    let genQuizIndex = 0;
+    let genQuizInterval = null;
+
+  let uploadedFileName = '';
+
     // Step 1: Upload and Analyze PDF
     uploadForm.onsubmit = async (e) => {
       e.preventDefault();
       
-      // Show loading
       loading.style.display = "block";
       uploadSection.style.display = "none";
       loadingText.textContent = "Analyzing PDF content...";
       
       const formData = new FormData(uploadForm);
+    const fileInput = document.getElementById('pdfFile');
+    if (fileInput && fileInput.files.length > 0) {
+      uploadedFileName = fileInput.files[0].name;
+    } else {
+      uploadedFileName = '';
+    }
+    
       try {
-        const res = await fetch('/analyze_pdf', { 
+        const res = await fetch('http://localhost:5000/analyze_pdf', { 
           method: 'POST', 
           body: formData 
         });
@@ -129,7 +461,6 @@
         if (!res.ok) throw new Error('Server error');
         const data = await res.json();
         
-        // Check if there's an error
         if (data.error) {
           alert(data.error);
           loading.style.display = "none";
@@ -137,13 +468,10 @@
           return;
         }
         
-        // Save text content for later
         pdfTextContent = data.text_content;
         
-        // Show question count options
         displayQuestionOptions(data.options, data.max_questions);
         
-        // Hide loading, show question options
         loading.style.display = "none";
         questionOptionsSection.style.display = "block";
         
@@ -154,7 +482,6 @@
       }
     };
 
-    // Display available question count options
     function displayQuestionOptions(options, maxQuestions) {
       questionOptions.innerHTML = "";
       
@@ -163,18 +490,15 @@
         btn.textContent = `${count} Questions`;
         btn.className = 'btn btn-outline-primary me-2';
         btn.onclick = () => {
-          // Deselect all buttons
           document.querySelectorAll('.question-options .btn').forEach(b => 
             b.classList.replace('btn-primary', 'btn-outline-primary'));
           
-          // Select this button
           btn.classList.replace('btn-outline-primary', 'btn-primary');
           selectedQuestionCount = count;
         };
         questionOptions.appendChild(btn);
       });
       
-      // Auto-select the first option
       if (options.length > 0) {
         const firstBtn = questionOptions.querySelector('.btn');
         firstBtn.classList.replace('btn-outline-primary', 'btn-primary');
@@ -184,45 +508,49 @@
 
     // Step 2: Generate Quiz
     generateQuizBtn.onclick = async () => {
-      // Show loading
       questionOptionsSection.style.display = "none";
       loading.style.display = "block";
       loadingText.textContent = "Generating quiz questions...";
+      showGeneratingQuizMsg();
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('user_id');
       
       try {
-        const res = await fetch('/generate_quiz', {
+        const res = await fetch('http://localhost:5000/generate_quiz', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             text_content: pdfTextContent,
-            question_count: selectedQuestionCount
+            question_count: selectedQuestionCount,
+            user_id: userId
           })
         });
         
         if (!res.ok) throw new Error('Server error');
         const data = await res.json();
         
-        // Check if there's an error
         if (data.error) {
           alert(data.error);
           loading.style.display = "none";
           questionOptionsSection.style.display = "block";
+          hideGeneratingQuizMsg();
           return;
         }
         
-        // Process quiz data
         quizRaw.value = data.quiz;
-        downloadBtn.style.display = 'inline-block';
         
         quizData = parseQuiz(data.quiz);
+      
+      localStorage.setItem('quizData', JSON.stringify(quizData));
         
-        // Validate parsed quiz data
         if (quizData.length === 0) {
           alert("Unable to generate valid quiz questions. Please try again or choose a different number of questions.");
           loading.style.display = "none";
           questionOptionsSection.style.display = "block";
+          hideGeneratingQuizMsg();
           return;
         }
         
@@ -233,63 +561,68 @@
         currentQuestionIndex = 0;
         score = 0;
         
-        // Reset and start timers
         resetTimers();
-        startTimers();
-        document.getElementById('timerDisplay').style.display = 'flex';
-        
-        // Hide loading, show quiz
+        document.getElementById('timerDisplay').style.display = 'none';
+        quizContainer.innerHTML = '';
+        nextBtn.style.display = 'none';
+        retryBtn.style.display = 'none';
+        scoreContainer.innerText = '';
+        document.getElementById('timerSummary').style.display = 'none';
+        document.getElementById('buttonContainer').style.display = 'none';
         loading.style.display = "none";
-        showQuestion();
+        hideGeneratingQuizMsg();
+        showPostQuizGenModal();
         
       } catch (error) {
         alert("Error generating quiz: " + error.message);
         loading.style.display = "none";
         questionOptionsSection.style.display = "block";
+        hideGeneratingQuizMsg();
       }
     };
 
     function parseQuiz(text) {
-      // Clean the text first - remove any extra line breaks or whitespace
       const cleanText = text.replace(/\n{3,}/g, '\n\n').trim();
       
-      // Find all questions - they should start with a number followed by period
       const questions = cleanText.split(/\n(?=\d+\.\s)/g);
       
       return questions.map(q => {
         const parts = q.trim().split('\n');
         
-        // Get question text (first line minus the number)
         const questionText = parts[0].replace(/^\d+\.\s*/, '');
         
-        // Find options (look for A., B., C., D. patterns)
         const options = [];
         for (let i = 1; i < parts.length; i++) {
           const line = parts[i].trim();
           if (/^[A-D]\.\s/.test(line)) {
             options.push({
-              label: line[0],  // Get the option letter
-              text: line.slice(3).trim()  // Get text after the letter
+              label: line[0],  
+              text: line.slice(3).trim()  
             });
           }
         }
         
-        // Find answer line
         const answerLine = parts.find(line => 
           line.toLowerCase().trim().startsWith('answer'));
         
         let correct = '';
         if (answerLine) {
-          // Extract just the letter from "Answer: X"
           const match = answerLine.match(/:\s*([A-D])/i);
           if (match) correct = match[1].toUpperCase();
         }
         
         return { questionText, options, correct };
       }).filter(q => 
-        // Filter out malformed questions (must have question text, 4 options, and an answer)
         q.questionText && q.options.length === 4 && q.correct
       );
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     }
 
     function showQuestion() {
@@ -297,34 +630,45 @@
         quizContainer.innerHTML = "<p>No questions available</p>";
         return;
       }
-      
-      // Reset question timer for new question
+      document.getElementById('buttonContainer').style.display = 'block';
       resetQuestionTimer();
-      
+
       const q = quizData[currentQuestionIndex];
+      let options = q.options.map(opt => ({ ...opt }));
+      let correctLabel = q.correct;
+      let correctText = options.find(opt => opt.label === correctLabel)?.text;
+      let shuffled = shuffleArray(options.slice());
+      let newCorrectLabel = '';
+      for (let i = 0; i < shuffled.length; i++) {
+        if (shuffled[i].text === correctText) {
+          newCorrectLabel = String.fromCharCode(65 + i); // 'A', 'B', 'C', 'D'
+          break;
+        }
+      }
+      shuffled = shuffled.map((opt, idx) => ({ ...opt, label: String.fromCharCode(65 + idx) }));
+
       quizContainer.innerHTML = `
         <h5>Question ${currentQuestionIndex + 1} of ${quizData.length}</h5>
         <p>${q.questionText}</p>
       `;
 
-      q.options.forEach(opt => {
+      shuffled.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = `${opt.label}. ${opt.text}`;
         btn.className = 'btn btn-outline-dark option-btn';
         btn.dataset.label = opt.label;
 
         btn.onclick = () => {
-          // Save question timestamp and time taken
           questionTimestamps[currentQuestionIndex] = {
             questionNum: currentQuestionIndex + 1,
             timeTaken: questionSeconds,
-            correct: btn.dataset.label === q.correct
+            correct: btn.dataset.label === newCorrectLabel
           };
-          
-          const isCorrect = btn.dataset.label === q.correct;
+
+          const isCorrect = btn.dataset.label === newCorrectLabel;
           btn.classList.add(isCorrect ? 'correct' : 'incorrect');
           if (!isCorrect) {
-            const correctBtn = [...quizContainer.querySelectorAll('button')].find(b => b.dataset.label === q.correct);
+            const correctBtn = [...quizContainer.querySelectorAll('button')].find(b => b.dataset.label === newCorrectLabel);
             if (correctBtn) correctBtn.classList.add('correct');
           } else {
             score++;
@@ -332,10 +676,8 @@
           [...quizContainer.querySelectorAll('button')].forEach(b => b.disabled = true);
           nextBtn.style.display = currentQuestionIndex < quizData.length - 1 ? 'inline-block' : 'none';
           if (currentQuestionIndex === quizData.length - 1) {
-            // End of quiz
             stopTimers();
             displayTimerSummary();
-            scoreContainer.innerHTML = `<p>Your Score: ${score}/${quizData.length}</p>`;
             retryBtn.style.display = 'inline-block';
           }
         };
@@ -350,43 +692,62 @@
       nextBtn.style.display = 'none';
     };
 
-    retryBtn.onclick = () => {
-      currentQuestionIndex = 0;
-      score = 0;
-      retryBtn.style.display = 'none';
-      scoreContainer.innerText = '';
-      document.getElementById('timerSummary').style.display = 'none';
-      
-      // Reset and restart timers
-      resetTimers();
-      startTimers();
-      
-      showQuestion();
-    };
-
-    downloadBtn.onclick = () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const text = quizRaw.value;
-      const margin = 10, lineHeight = 10, pageHeight = doc.internal.pageSize.height;
-      const lines = doc.splitTextToSize(text, 180);
-      let y = margin;
-      lines.forEach(line => {
-        if (y + lineHeight > pageHeight - margin) {
-          doc.addPage();
-          y = margin;
+    retryBtn.onclick = async () => {
+      loading.style.display = "block";
+      loadingText.textContent = "Generating new quiz questions...";
+      showGeneratingQuizMsg();
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('user_id');
+      try {
+        const res = await fetch('http://localhost:5000/generate_quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text_content: pdfTextContent,
+            question_count: selectedQuestionCount,
+            user_id: userId
+          })
+        });
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        if (data.error) {
+          alert(data.error);
+          loading.style.display = "none";
+          hideGeneratingQuizMsg();
+          return;
         }
-        doc.text(line, margin, y);
-        y += lineHeight;
-      });
-      doc.save("generated_quiz.pdf");
+        quizRaw.value = data.quiz;
+        quizData = parseQuiz(data.quiz);
+        if (quizData.length === 0) {
+          alert("Unable to generate valid quiz questions. Please try again.");
+          loading.style.display = "none";
+          hideGeneratingQuizMsg();
+          return;
+        }
+        currentQuestionIndex = 0;
+        score = 0;
+        retryBtn.style.display = 'none';
+        scoreContainer.innerText = '';
+        document.getElementById('timerSummary').style.display = 'none';
+        resetTimers();
+        document.getElementById('timerDisplay').style.display = 'none';
+        quizContainer.innerHTML = '';
+        nextBtn.style.display = 'none';
+        document.getElementById('buttonContainer').style.display = 'none';
+        loading.style.display = "none";
+        hideGeneratingQuizMsg();
+        showPostQuizGenModal();
+      } catch (error) {
+        alert("Error generating new quiz: " + error.message);
+        loading.style.display = "none";
+        hideGeneratingQuizMsg();
+      }
     };
     
-    // Timer Functions
     function formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${seconds} seconds`;
     }
     
     function updateTimers() {
@@ -398,7 +759,6 @@
       const questionTimerElement = document.getElementById('questionTimer');
       questionTimerElement.textContent = formatTime(questionSeconds);
       
-      // Add warning classes based on time
       if (questionSeconds >= 60) {
         questionTimerElement.classList.add('time-warning');
       }
@@ -422,24 +782,59 @@
       totalSeconds = 0;
       questionSeconds = 0;
       questionTimestamps = [];
-      document.getElementById('totalTimer').textContent = "00:00";
-      document.getElementById('questionTimer').textContent = "00:00";
+    document.getElementById('totalTimer').textContent = "0 seconds";
+    document.getElementById('questionTimer').textContent = "0 seconds";
     }
     
     function resetQuestionTimer() {
       questionSeconds = 0;
       const questionTimerElement = document.getElementById('questionTimer');
-      questionTimerElement.textContent = "00:00";
+    questionTimerElement.textContent = "0 seconds";
       questionTimerElement.classList.remove('time-warning', 'time-danger');
     }
     
     function displayTimerSummary() {
       const timerSummary = document.getElementById('timerSummary');
       timerSummary.style.display = 'block';
+        document.getElementById('buttonContainer').style.display = 'block';
+      
+      const scorePercentage = Math.round((score / quizData.length) * 100);
+      
+      let grade, colorClass;
+      if (scorePercentage >= 80) {
+        grade = 'A';
+        colorClass = 'text-success';
+      } else {
+        grade = 'F';
+        colorClass = 'text-danger';
+      }
+      
+      const summaryData = {
+        score: score,
+        totalQuestions: quizData.length,
+        percentage: scorePercentage,
+        grade: grade,
+        colorClass: colorClass,
+        totalTime: formatTime(totalSeconds),
+        questionDetails: questionTimestamps.map(q => ({
+          questionNum: q.questionNum,
+          timeTaken: formatTime(q.timeTaken),
+          correct: q.correct
+      })),
+      fileName: uploadedFileName
+      };
+      localStorage.setItem('quizSummary', JSON.stringify(summaryData));
       
       let summaryHTML = `
-        <h5>Time Summary</h5>
+        <h5>Results Summary</h5>
         <p>Total Quiz Time: ${formatTime(totalSeconds)}</p>
+      <p><b>File Name:</b> ${uploadedFileName ? uploadedFileName : 'N/A'}</p>
+        <div class="score-summary mb-3">
+          <h4 class="${colorClass}">
+            Score: ${score}/${quizData.length} (${scorePercentage}%)
+            <span class="badge bg-${colorClass.replace('text-', '')} ms-2">Grade ${grade}</span>
+          </h4>
+        </div>
         <div class="table-responsive">
           <table class="table table-sm table-bordered">
             <thead>
@@ -466,10 +861,274 @@
             </tbody>
           </table>
         </div>
+        <button id="saveToMonitorBtn" class="btn btn-info mt-3">Save to Monitor</button>
+        <div id="saveMonitorMsg" class="mt-2"></div>
       `;
-      
+
+      if (questionTimestamps.length > 0) {
+        const times = questionTimestamps.map(q => q.timeTaken);
+        const averageTime = times.reduce((sum, time) => sum + time, 0) / times.length;
+        const hardestQuestions = questionTimestamps
+          .filter(q => q.timeTaken > averageTime)
+          .map(q => q.questionNum);
+        if (hardestQuestions.length > 0 && hardestQuestions.length < questionTimestamps.length) {
+          summaryHTML += `<div class="mt-3 text-warning d-flex align-items-center"><img src="ow!.png" alt="info" style="width:50px;margin-right:8px;"><b>It seems like question${hardestQuestions.length > 1 ? 's' : ''} ${hardestQuestions.join(' & ')} might be hard for you as it took longer than average time. Perhaps you want to look into that more? (This is just an assumption)</b></div>`;
+        }
+      }
+
       timerSummary.innerHTML = summaryHTML;
+    document.getElementById('buttonContainer').style.display = 'block';
+    scoreContainer.innerHTML = '';
+
+      setTimeout(() => {
+        const saveBtn = document.getElementById('saveToMonitorBtn');
+        if (saveBtn) {
+          saveBtn.onclick = async function() {
+            const msgDiv = document.getElementById('saveMonitorMsg');
+            msgDiv.textContent = '';
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+            const payload = {
+              title: uploadedFileName || 'N/A',
+              corrected: score,
+              score: scorePercentage,
+              totalQuestions: quizData.length,
+              percentage: scorePercentage,
+              grade: grade,
+              timeTaken: totalSeconds,
+              user_id: userId
+            };
+            try {
+              const response = await fetch('http://localhost:8000/monitor_submit.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const data = await response.json();
+              if (data.success) {
+                msgDiv.innerHTML = '<span class="text-success">Saved to monitor successfully!</span>';
+                saveBtn.textContent = 'Saved!';
+              } else {
+                msgDiv.innerHTML = '<span class="text-danger">Failed to save: ' + (data.message || 'Unknown error') + '</span>';
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save to Monitor';
+              }
+            } catch (err) {
+              msgDiv.innerHTML = '<span class="text-danger">Network error. Please try again.</span>';
+              saveBtn.disabled = false;
+              saveBtn.textContent = 'Save to Monitor';
+            }
+          }
+        }
+      }, 0);
     }
+
+    function returnToQuiz() {
+      localStorage.removeItem('quizSummary');
+      localStorage.removeItem('quizData');
+      currentQuestionIndex = 0;
+      score = 0;
+      retryBtn.style.display = 'none';
+      scoreContainer.innerText = '';
+      document.getElementById('timerSummary').style.display = 'none';
+      document.getElementById('buttonContainer').style.display = 'none';
+      resetTimers();
+      uploadSection.style.display = 'block';
+      questionOptionsSection.style.display = 'none';
+      quizContainer.innerHTML = '';
+    }
+
+    function checkStoredSummary() {
+      const storedSummary = localStorage.getItem('quizSummary');
+      if (storedSummary) {
+        const summaryData = JSON.parse(storedSummary);
+        const timerSummary = document.getElementById('timerSummary');
+        
+        let summaryHTML = `
+          <h5>Time Summary</h5>
+          <p>Total Quiz Time: ${summaryData.totalTime}</p>
+        <p><b>File Name:</b> ${summaryData.fileName ? summaryData.fileName : 'N/A'}</p>
+          <div class="score-summary mb-3">
+            <h4 class="${summaryData.colorClass}">
+              Score: ${summaryData.score}/${summaryData.totalQuestions} (${summaryData.percentage}%)
+              <span class="badge bg-${summaryData.colorClass.replace('text-', '')} ms-2">Grade ${summaryData.grade}</span>
+            </h4>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>Time Taken</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        summaryData.questionDetails.forEach(q => {
+          summaryHTML += `
+            <tr>
+              <td>Question ${q.questionNum}</td>
+              <td>${q.timeTaken}</td>
+              <td>${q.correct ? '<span class="text-success">Correct</span>' : '<span class="text-danger">Incorrect</span>'}</td>
+            </tr>
+          `;
+        });
+        
+        summaryHTML += `
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        if (summaryData.questionDetails && summaryData.questionDetails.length > 0) {
+          const times = summaryData.questionDetails.map(q => {
+            const match = q.timeTaken.match(/(\d+)/);
+            return match ? parseInt(match[1], 10) : 0;
+          });
+          const averageTime = times.reduce((sum, time) => sum + time, 0) / times.length;
+          const hardestQuestions = summaryData.questionDetails
+            .map((q, idx) => ({ num: q.questionNum, t: times[idx] }))
+            .filter(q => q.t > averageTime)
+            .map(q => q.num);
+          if (hardestQuestions.length > 0 && hardestQuestions.length < summaryData.questionDetails.length) {
+            summaryHTML += `<div class="mt-3 text-warning d-flex align-items-center"><img src="studdybuddy_logo.png" alt="info" style="width:100px;margin-right:8px;"><b>It seems like question${hardestQuestions.length > 1 ? 's' : ''} ${hardestQuestions.join(' & ')} might be hard for you as it took longer than average time. Perhaps you want to look into that more? (This is just an assumption)</b></div>`;
+          }
+        }
+
+        timerSummary.innerHTML = summaryHTML;
+        timerSummary.style.display = 'block';
+      document.getElementById('buttonContainer').style.display = 'block';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      checkStoredSummary();
+    document.getElementById('buttonContainer').style.display = 'none';
+    });
+
+    function showGeneratingQuizMsg() {
+      generatingQuizMsg.style.display = "block";
+      genQuizText.textContent = genQuizSentences[0];
+      genQuizIndex = 0;
+      genQuizInterval = setInterval(() => {
+        genQuizIndex = (genQuizIndex + 1) % genQuizSentences.length;
+        genQuizText.textContent = genQuizSentences[genQuizIndex];
+      }, 4000); 
+    }
+
+    function hideGeneratingQuizMsg() {
+      generatingQuizMsg.style.display = "none";
+      clearInterval(genQuizInterval);
+    }
+
+  function handleLogout() {
+      localStorage.removeItem('quizSummary');
+      localStorage.removeItem('quizData');
+      document.getElementById('buttonContainer').style.display = 'none';
+        sessionStorage.removeItem('welcomeModalShown');
+      window.location.href = 'http://localhost:8000/login.php';
+  }
+
+  function showPostQuizGenModal() {
+    const downloadQuizNowBtn = document.getElementById('downloadQuizNowBtn');
+    const continueQuizBtn = document.getElementById('continueQuizBtn');
+    downloadQuizNowBtn.onclick = function() {
+      hidePostQuizGenModal();
+      const storedQuizData = localStorage.getItem('quizData');
+      if (!storedQuizData) {
+          alert('No quiz data available to download');
+          return;
+      }
+      const quizData = JSON.parse(storedQuizData);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const margin = 10;
+      const lineHeight = 8;
+      const pageHeight = doc.internal.pageSize.height;
+      const pageWidth = doc.internal.pageSize.width;
+      const maxLineWidth = pageWidth - 2 * margin;
+      let y = margin;
+      const answersOnly = [];
+      quizData.forEach((q, index) => {
+        let questionHeader = `${index + 1}. ${q.questionText}`;
+        let questionLines = doc.splitTextToSize(questionHeader, maxLineWidth);
+        questionLines.forEach(line => {
+          if (y + lineHeight > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+        let options = q.options.map(opt => ({ ...opt }));
+        let correctLabel = q.correct;
+        let correctText = options.find(opt => opt.label === correctLabel)?.text;
+        let shuffled = shuffleArray(options.slice());
+        let newCorrectLabel = '';
+        for (let i = 0; i < shuffled.length; i++) {
+          if (shuffled[i].text === correctText) {
+            newCorrectLabel = String.fromCharCode(65 + i); // 'A', 'B', 'C', 'D'
+            break;
+          }
+        }
+        shuffled = shuffled.map((opt, idx) => ({ ...opt, label: String.fromCharCode(65 + idx) }));
+        shuffled.forEach(opt => {
+          const optLine = `${opt.label}. ${opt.text}`;
+          const optLines = doc.splitTextToSize(optLine, maxLineWidth);
+          optLines.forEach(line => {
+            if (y + lineHeight > pageHeight - margin) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += lineHeight;
+          });
+        });
+        y += lineHeight;
+        answersOnly.push(`${index + 1}. ${newCorrectLabel}: ${shuffled.find(o => o.label === newCorrectLabel)?.text}`);
+      });
+      doc.addPage();
+      y = margin;
+      doc.text("Answer Key:", margin, y);
+      y += lineHeight * 2;
+      answersOnly.forEach(line => {
+        const answerLines = doc.splitTextToSize(line, maxLineWidth);
+        answerLines.forEach(ans => {
+          if (y + lineHeight > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(ans, margin, y);
+          y += lineHeight;
+        });
+      });
+      doc.save("generated_quiz.pdf");
+      setTimeout(() => { returnToQuiz(); }, 500);
+    };
+    continueQuizBtn.onclick = function() {
+      hidePostQuizGenModal();
+      startTimers();
+      document.getElementById('timerDisplay').style.display = 'flex';
+      showQuestion();
+    };
+    document.getElementById('postQuizGenModal').style.display = 'flex';
+  }
+  function hidePostQuizGenModal() {
+    document.getElementById('postQuizGenModal').style.display = 'none';
+    }
+
+    function clearQuizSummary() {
+      localStorage.removeItem('quizSummary');
+      localStorage.removeItem('quizData');
+    }
+    document.getElementById('navMonitor').addEventListener('click', clearQuizSummary);
+    document.getElementById('navHistory').addEventListener('click', clearQuizSummary);
+    document.getElementById('navHome').addEventListener('click', clearQuizSummary);
   </script>
+</div>
 </body>
 </html>
