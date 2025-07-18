@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #444;
+      color: white;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links li a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      position: fixed;
+      right: -300px;
+      top: 0;
+      width: 300px;
+      height: 100vh;
+      background-color: #fff;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .sidebar.open {
+      right: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .sidebar-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 10px;
+    }
+
+    .sidebar-menu button {
+      width: 100%;
+      padding: 10px;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #333;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    .sidebar-menu button:hover {
+      background-color: #f5f5f5;
+    }
+
+    .credential-form {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+
+    .credential-form input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .credential-form button {
+      width: 100%;
+      padding: 8px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .credential-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .sidebar-toggle {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+    td.actions-cell {
+      padding: 0 !important;
+      margin: 0 !important;
+      height: 1px;
+      vertical-align: middle !important;
+    }
+    .actions-cell .center-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 48px;
+      min-height: 48px;
+      min-width: 48px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-700 font-sans min-h-screen flex flex-col">
+
+  <div id="leftSidebar" style="position:fixed;top:0;left:0;height:100vh;width:220px;background:#222;color:#fff;z-index:1100;display:flex;flex-direction:column;align-items:center;padding-top:40px;justify-content:space-between;">
+    <div style="width:100%">
+      <div class="mb-6" style="font-size:1.5rem;font-weight:bold;text-align:left;padding-left:24px;">StudyBuddy</div>
+        <div class="flex flex-col gap-y-2 px-1">
+        <a id="navHome" href="#" class="text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-gray-700 d-block">Home</a>
+        <a id="navMonitor" href="#" class="text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-gray-700 d-block">Monitor</a>
+        <a id="navHistory" href="#" class="text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-gray-700 d-block">Quiz History</a>
+      </div>
+      <hr class="w-100 my-4" style="border-color:#444;">
+      <div class="flex flex-col gap-y-2 px-1 mt-4">
+        <a id="changeUsernameBtn" href="#" class="text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-gray-700 d-block">Change Username</a>
+        <form id="usernameForm" class="mb-2" style="display:none;background:none;padding:0;">
+          <input type="text" id="newUsername" placeholder="New Username" style="width:100%;border:1px solid #444;background:#222;color:#fff;border-radius:6px;padding:6px 10px;margin-bottom:6px;outline:none;" />
+          <button type="submit" style="width:100%;background:#007bff;color:#fff;border:none;border-radius:6px;padding:6px 0;font-size:1rem;">Update Username</button>
+        </form>
+        <a id="changePasswordBtn" href="#" class="text-white text-decoration-none w-100 px-3 py-2 rounded hover:bg-gray-700 d-block">Change Password</a>
+        <form id="passwordForm" class="mb-2" style="display:none;background:none;padding:0;">
+          <input type="password" id="newPassword" placeholder="New Password" style="width:100%;border:1px solid #444;background:#222;color:#fff;border-radius:6px;padding:6px 10px;margin-bottom:6px;outline:none;" />
+          <button type="submit" style="width:100%;background:#007bff;color:#fff;border:none;border-radius:6px;padding:6px 0;font-size:1rem;">Update Password</button>
+        </form>
+      </div>
+    </div>
+    <div class="w-100 px-1 mb-4" style="width:86.5%; margin-bottom: 30px;">
+      <button onclick="handleLogout()" style="width:100%;background:#dc3546;color:#fff;border:none;border-radius:7px;padding:8.5px 0;font-size:1rem;">Logout</button>
+    </div>
+  </div>
+<div style="margin-left:220px;">
+
+  <section class="bg-white p-8 rounded-xl shadow-md mb-8">
+    <h2 class="text-4xl font-bold mb-4">Score per Topic</h2>
+    <canvas id="scoreChart" height="100"></canvas>
+  </section>
+  <section class="bg-white p-8 rounded-xl shadow-md mb-8">
+    <h2 class="text-4xl font-bold mb-4">Time Taken per Topic</h2>
+    <canvas id="timeChart" height="100"></canvas>
+  </section>
+  <section class="bg-white p-8 rounded-xl shadow-md mb-8">
+    <h2 class="text-4xl font-bold mb-4">Sessions per Date</h2>
+    <canvas id="sessionChart" height="100"></canvas>
+  </section>
+  <section class="bg-white p-8 rounded-xl shadow-md">
+    <h2 class="text-4xl font-bold mb-6">Performance Tracking Records</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border border-gray-300 rounded-lg divide-y divide-gray-200">
+        <thead class="bg-indigo-50 text-indigo-700 font-semibold">
+          <tr>
+            <th class="px-4 py-3">Title</th>
+            <th class="px-4 py-3">Corrected Quiz Count</th>
+            <th class="px-4 py-3">Time Taken (s)</th>
+            <th class="px-4 py-3">Score (%)</th>
+            <th class="px-4 py-3">Date</th>
+            <th class="px-4 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="monitorRecords" class="divide-y divide-gray-200">
+          <!-- Data injected here -->
+        </tbody>
+      </table>
+    </div>
+    <p id="recordsMessage" class="text-center mt-4 text-gray-500"></p>
+  </section>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Edit Record</h3>
+        <form id="editForm" class="space-y-4">
+          <input type="hidden" id="editMonitorId">
+          <div>
+            <label for="editTitle" class="block text-sm font-medium text-gray-700">Title</label>
+            <input type="text" id="editTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label for="editQuiz" class="block text-sm font-medium text-gray-700">Corrected Quiz Count</label>
+            <input type="number" id="editQuiz" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label for="editTime" class="block text-sm font-medium text-gray-700">Time Taken (seconds)</label>
+            <input type="number" id="editTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label for="editScore" class="block text-sm font-medium text-gray-700">Score (%)</label>
+            <input type="number" id="editScore" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+    const navHome = document.getElementById('navHome');
+    const navMonitor = document.getElementById('navMonitor');
+    const navHistory = document.getElementById('navHistory');
+    if (userId) {
+      navHome.href = `http://localhost:8000/index.html?user_id=${userId}`;
+      navMonitor.href = `http://localhost:8000/monitor.html?user_id=${userId}`;
+      navHistory.href = `http://localhost:8000/quiz_history.html?user_id=${userId}`;
+    }
+    const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const usernameForm = document.getElementById('usernameForm');
+    const passwordForm = document.getElementById('passwordForm');
+    changeUsernameBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      usernameForm.style.display = usernameForm.style.display === 'block' ? 'none' : 'block';
+      passwordForm.style.display = 'none';
+    });
+    changePasswordBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      passwordForm.style.display = passwordForm.style.display === 'block' ? 'none' : 'block';
+      usernameForm.style.display = 'none';
+    });
+    usernameForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      changeUsername();
+    });
+    passwordForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      changePassword();
+    });
+  });
+
+  async function changeUsername() {
+    const newUsername = document.getElementById('newUsername').value.trim();
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
+    if (!newUsername) {
+      alert('Please enter a new username');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/update_username.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, new_username: newUsername })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Username updated successfully');
+        document.getElementById('usernameForm').style.display = 'none';
+        document.getElementById('newUsername').value = '';
+      } else {
+        alert(data.message || 'Failed to update username');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while updating username');
+    }
+  }
+
+  async function changePassword() {
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
+    if (!newPassword) {
+      alert('Please enter a new password');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/update_password.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, new_password: newPassword })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Password updated successfully');
+        document.getElementById('passwordForm').style.display = 'none';
+        document.getElementById('newPassword').value = '';
+      } else {
+        alert(data.message || 'Failed to update password');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred while updating password');
+    }
+  }
+
+  const recordsBody = document.getElementById('monitorRecords');
+  const recordsMessage = document.getElementById('recordsMessage');
+  const editModal = document.getElementById('editModal');
+  const editForm = document.getElementById('editForm');
+
+  async function loadMonitorRecords() {
+    recordsMessage.textContent = 'Loading records...';
+    recordsBody.innerHTML = '';
+    try {
+      const res = await fetch('http://localhost:8000/get_monitor_records.php');
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.records)) {
+        if (data.records.length === 0) {
+          recordsMessage.textContent = 'No monitor records found.';
+          renderScoreChart([]);
+          return;
+        }
+        recordsMessage.textContent = '';
+        recordsBody.innerHTML = data.records.map(record => `
+          <tr>
+            <td class="px-4 py-3 border border-gray-300">${escapeHtml(record.title)}</td>
+            <td class="px-4 py-3 border border-gray-300">${record.corrected_quiz_count}</td>
+            <td class="px-4 py-3 border border-gray-300">${record.time_taken}</td>
+            <td class="px-4 py-3 border border-gray-300">${record.score}</td>
+            <td class="px-4 py-3 border border-gray-300">${escapeHtml(record.date ? record.date.split(' ')[0] : '')}</td>
+            <td class="actions-cell border border-gray-300">
+              <div class="center-action">
+                <button onclick="deleteRecord(${record.id})" 
+                  class="rounded-full bg-red-500 hover:bg-red-600 text-white w-9 h-9 flex items-center justify-center shadow transition" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+        renderScoreChart(data.records);
+      } else {
+        recordsMessage.textContent = 'Failed to load records.';
+        renderScoreChart([]);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      recordsMessage.textContent = 'Network error while loading records.';
+      renderScoreChart([]);
+    }
+  }
+
+  let scoreChartInstance = null;
+  let timeChartInstance = null;
+  let sessionChartInstance = null;
+  function renderScoreChart(records) {
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    const labels = records.map(r => r.title).reverse();
+    const scores = records.map(r => r.score).reverse();
+    const dates = records.map(r => r.date ? r.date.split(' ')[0] : '').reverse();
+
+    if (scoreChartInstance) scoreChartInstance.destroy();
+    scoreChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Score',
+          data: scores,
+          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          dates: dates
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const score = context.parsed.y;
+                const date = context.dataset.dates[context.dataIndex];
+                return `Score: ${score}\nDate: ${date}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Quiz Title' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Score' } }
+        }
+      }
+    });
+
+    const timeCtx = document.getElementById('timeChart').getContext('2d');
+    const times = records.map(r => r.time_taken).reverse();
+    if (timeChartInstance) timeChartInstance.destroy();
+    timeChartInstance = new Chart(timeCtx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Time Taken (s)',
+          data: times,
+          backgroundColor: 'rgba(255, 159, 64, 0.7)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Time Taken: ${context.parsed.y} s`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Quiz Title' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Time Taken (s)' } }
+        }
+      }
+    });
+
+    const sessionCtx = document.getElementById('sessionChart').getContext('2d');
+    const dateCounts = {};
+    records.forEach(r => {
+      const date = r.date ? r.date.split(' ')[0] : '';
+      if (date) {
+        dateCounts[date] = (dateCounts[date] || 0) + 1;
+      }
+    });
+    const sessionDates = Object.keys(dateCounts).sort();
+    const sessionCounts = sessionDates.map(date => dateCounts[date]);
+    if (sessionChartInstance) sessionChartInstance.destroy();
+    sessionChartInstance = new Chart(sessionCtx, {
+      type: 'bar',
+      data: {
+        labels: sessionDates,
+        datasets: [{
+          label: 'Sessions',
+          data: sessionCounts,
+          backgroundColor: 'rgba(75, 192, 192, 0.7)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Sessions: ${context.parsed.y}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Date' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Sessions' } }
+        }
+      }
+    });
+  }
+
+  function openEditModal(id, title, quiz, time, score) {
+    document.getElementById('editMonitorId').value = id;
+    document.getElementById('editTitle').value = title;
+    document.getElementById('editQuiz').value = quiz;
+    document.getElementById('editTime').value = time;
+    document.getElementById('editScore').value = score;
+    editModal.classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+  }
+
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editMonitorId').value;
+    const title = document.getElementById('editTitle').value;
+    const quiz = document.getElementById('editQuiz').value;
+    const time = document.getElementById('editTime').value;
+    const score = document.getElementById('editScore').value;
+
+    try {
+      const response = await fetch('http://localhost:8000/update_monitor.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ monitor_id: id, title, quiz, time, score })
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        closeEditModal();
+        loadMonitorRecords();
+      } else {
+        alert(data.message || 'Failed to update record');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Network error while updating record');
+    }
+  });
+
+  async function deleteRecord(id) {
+    if (!confirm('Are you sure you want to delete this record?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/delete_monitor.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ monitor_id: id })
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        loadMonitorRecords();
+      } else {
+        alert(data.message || 'Failed to delete record');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Network error while deleting record');
+    }
+  }
+
+  function escapeHtml(text) {
+    return text?.toString()
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;") || '';
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadMonitorRecords();
+  });
+
+  function handleLogout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = 'login.php';
+  }
+</script>
+
+</div>
+</body>
+</html>
